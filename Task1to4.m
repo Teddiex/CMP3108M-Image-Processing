@@ -1,36 +1,33 @@
 clear; close all;
 
+
 % Task 1: Pre-processing -----------------------
 % Step-1: Load input image
 I = imread('Assignment_Input\IMG_01.jpg');
-figure, imshow(I)
+figure, imshow(I), title('Original Image');
 
 % Step-2: Covert image to grayscale
 I_gray = rgb2gray(I);
-figure, imshow(I_gray)
+figure, imshow(I_gray), title('Grayscale image');
 
 % Step-3: Rescale image
 J = imresize(I_gray, 0.5, 'bilinear');
-figure, imshow(J)
-title('Image reiszed to half size via billinear interpolation')
+figure, imshow(J), title('Image reiszed to half size via billinear interpolation');
 % Step-4: Produce histogram before enhancing
-figure, imhist(J, 64);
+figure, imhist(J, 256), title('Histogram before enhancement');
 % Step-5: Enhance image before binarisation
-enhancedJ = imadjust(J);
-figure , imshow(enhancedJ);
-title('Enhanced Image')
+enhancedJ = imadjust(J, [0.35 0.99], []);
+figure , imshow(enhancedJ), title('Enhanced Image');
 % Step-6: Histogram after enhancement
-figure, imhist(enhancedJ, 64)
+figure, imhist(enhancedJ, 256), title("Histogram after enhancement");
 % Step-7: Image Binarisation
 BW = imbinarize(enhancedJ, 'adaptive','ForegroundPolarity','dark','Sensitivity',0.30);
 BW = ~BW;
 figure, imshow(BW)
 title('Original Binarised Image');
-
 % Task 2: Edge detection ------------------------
 edgeImg = edge(enhancedJ, "sobel");
-figure, imshow(edgeImg);
-title('Edge detection using sobel operator')
+figure, imshow(edgeImg), title('Edge detection using sobel operator');
 % Task 3: Simple segmentation --------------------
 
 %Structuring element for morphological operations
@@ -40,18 +37,15 @@ se2 = strel('disk', 2);
 %Dilate and fill holes
 I_Dilated = imdilate(edgeImg, se);
 I_Filled = imfill(I_Dilated, 'holes');
-figure, imshow(I_Filled);
-title('Dilated and holes filled image')
+figure, imshow(I_Filled), title('Dilated and holes filled image');
 
 %Erode image to remove some noise around objects
 I_Eroded = imerode(I_Filled, se2);
-figure, imshow(I_Eroded);
-title('Eroded Image')
+figure, imshow(I_Eroded), title('Eroded Image');
 
 %Removing objects less than 4 pixels
 BW2 = bwareaopen(I_Eroded, 4);
-figure, imshow(BW2)
-title('Segmented Image')
+figure, imshow(BW2), title('Segmented Image');
 
 % Task 4: Object Recognition --------------------
 

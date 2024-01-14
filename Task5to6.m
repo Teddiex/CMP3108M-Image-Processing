@@ -63,12 +63,11 @@ for i = 1:length(imageFiles)
             L(L == j) = 22;
         end
     end
-    
    
-
     %so I have to do it down here?? but it works in the other image
     %task1-4?
-    %this makes no sense
+
+    %Set label for washer, long screw and short screw.
     L(L == 20) = 1; %washer
     L(L == 21) = 3;%long screw
     L(L == 22) = 2;%short screw
@@ -81,90 +80,31 @@ for i = 1:length(imageFiles)
     outputFile = fullfile(outputFolder, [baseName '_processed' ext]);
     imwrite(rgb_label, outputFile);
 
-    
+    %Reading in ground truth images
     GT = imread(fullfile(GT_Folder, GT_Files(i).name));
+    %Creating label for GT image
     L_GT = label2rgb(GT, 'prism','k','shuffle');
     figure, imshow(L_GT), title(['GT Image: ', num2str(i)]);
     
-    [TP,TN,FP,FN] = deal(0);
-    [x,y] = size(L);
 
-%     classes = [0;1;2;3];
-%     C = zeros(length(classes));
-% 
-%     for j=1:x
-%         for k=1:y
-%             trueLabel = GT(j,k);
-%             predictedLabel = L(j,k);
-%             trueIndex = classes == trueLabel;
-%             predictedIndex = classes == predictedLabel;
-%             C(trueIndex, predictedIndex) = C(trueIndex, predictedIndex)+1;
-%         end
-%     end
+    TP = sum((GT == L) & (GT == 1 | GT == 2 | GT == 3));  % True Positives
+    TN = sum(GT == L & GT == 0);  % True Negatives
+    FP = sum(GT ~= L & L ~= 0);  % False Positives
+    FN = sum(GT ~= L & GT ~= 0);  % False Negatives
 
-
-
-    % for j=1:x
-    %     for k=1:y
-    %         if (GT(j,k) == 1 && L(j,k) == 1)
-    %             TP = TP + 1;
-    %         elseif (GT(j,k) == 2 && L(j,k) == 2)
-    %             TP = TP +1;
-    %         elseif (GT(j,k) == 3 && L(j,k) == 3)
-    %             TP = TP + 1;
-    %         elseif (GT(j,k) == 0 && L(j,k) == 0)
-    %             TN = TN + 1;
-    %         elseif (GT(j,k) == 0 && L(j,k) == 1)
-    %             FP = FP + 1;
-    %         elseif (GT(j,k) == 0 && L(j,k) == 2)
-    %             FP = FP + 1;
-    %         elseif (GT(j,k) == 0 && L(j,k) == 3)
-    %             FP = FP + 1;
-    %         elseif (GT(j,k) == 1 && L(j,k) == 0)
-    %             FN = FN + 1;
-    %         elseif (GT(j,k) == 2 && L(j,k) == 0)
-    %             FN = FN + 1;
-    %         elseif (GT(j,k) == 3 && L(j,k) == 0)
-    %             FN = FN + 1;
-    %         elseif (GT(j,k) == 2 && L(j,k) == 3)
-    %             FP = FP + 1;
-    %         end
-    %     end
-    % end
-    
-    % TP = sum((GT == L) & (GT == 1 | GT == 2 | GT == 3));  % True Positives
-    % TN = sum(GT == L & GT == 0);  % True Negatives
-    % FP = sum(GT ~= L & L ~= 0);  % False Positives\
-    % FN = sum(GT ~= L & GT ~= 0);  % False Negatives
-
-    
-
-    
-    logical_processed = logical(rgb_label);
+    %Convert to logical for dice score
+    logical_L = logical(rgb_label);
     logical_GT = logical(L_GT);
 
-    Precision = 0;
-    Recall = 0;
-    Dice = 0;
-
-    L_GT = im2double(L_GT);
-    rgb_label = im2double(rgb_label);
-    
-    Prec_test = sum(sum(L_GT&rgb_label))/sum(L_GT(:));
-    Recall_test = sum(sum(L_GT&rgb_label)) / sum(rgb_label(:));
-
-    Dice = dice(logical_processed, logical_GT);
+    Dice_score = dice(logical_L, logical_GT);
     Precision = TP/(TP+FP);
     Recall = TP/(TP+FN);
     
     disp(" ");
     disp("Image " + i + ": ");
 
-    disp("Dice Score: " + Dice);
+    disp("Dice Score: " + Dice_score);
     disp("Precision: "+ Precision);
     disp("Recall: "+ Recall);
-    % disp("Precision: " + num2str(Prec_test(:,:,1)));
-    % disp("Recall: " + num2str(Recall_test(:,:,1)));
-
 
 end
