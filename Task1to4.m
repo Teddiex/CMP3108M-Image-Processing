@@ -16,18 +16,21 @@ figure, imshow(J), title('Image reiszed to half size via billinear interpolation
 % Step-4: Produce histogram before enhancing
 figure, imhist(J, 256), title('Histogram before enhancement');
 % Step-5: Enhance image before binarisation
-enhancedJ = imadjust(J, [0.35 0.99], []);
+enhancedJ = imadjust(J);
+enhancedJ = imsharpen(enhancedJ, radius=1 , amount=1);
+
 figure , imshow(enhancedJ), title('Enhanced Image');
 % Step-6: Histogram after enhancement
 figure, imhist(enhancedJ, 256), title("Histogram after enhancement");
 % Step-7: Image Binarisation
-BW = imbinarize(enhancedJ, 'adaptive','ForegroundPolarity','dark','Sensitivity',0.30);
+BW = imbinarize(enhancedJ, 'adaptive','ForegroundPolarity','dark','Sensitivity',0.38);
 BW = ~BW;
 figure, imshow(BW)
 title('Original Binarised Image');
 % Task 2: Edge detection ------------------------
 edgeImg = edge(enhancedJ, "sobel");
 figure, imshow(edgeImg), title('Edge detection using sobel operator');
+
 % Task 3: Simple segmentation --------------------
 
 %Structuring element for morphological operations
@@ -36,6 +39,7 @@ se2 = strel('disk', 2);
 
 %Dilate and fill holes
 I_Dilated = imdilate(edgeImg, se);
+figure, imshow(I_Dilated), title('Dilated image')
 I_Filled = imfill(I_Dilated, 'holes');
 figure, imshow(I_Filled), title('Dilated and holes filled image');
 
@@ -44,13 +48,13 @@ I_Eroded = imerode(I_Filled, se2);
 figure, imshow(I_Eroded), title('Eroded Image');
 
 %Removing objects less than 4 pixels
-BW2 = bwareaopen(I_Eroded, 4);
-figure, imshow(BW2), title('Segmented Image');
+segmented = bwareaopen(I_Eroded, 4);
+figure, imshow(segmented), title('Segmented Image');
 
 % Task 4: Object Recognition --------------------
 
 %Getting labels from image
-[L, num] = bwlabel(BW2);
+[L, num] = bwlabel(segmented);
 labels = label2rgb(L, 'prism', 'k', 'shuffle');
 figure, imshow(labels);
 title(['Different labelled regions = ', num2str(num)]);

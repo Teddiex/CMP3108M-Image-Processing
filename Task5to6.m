@@ -1,5 +1,6 @@
 clear; close all;
 
+%Set input, output and ground truth folder names
 inputFolder_I = 'Assignment_Input';
 outputFolder = 'Assignment_Output';
 GT_Folder = 'Assignment_GT';
@@ -11,10 +12,10 @@ end
 
 % Task 5: Robust method --------------------------
 %+
-%finished
 imageFiles = dir(fullfile(inputFolder_I, '*.jpg'));
 GT_Files = dir(fullfile(GT_Folder, '*png'));
 
+%loop through each image and perform the operations
 for i = 1:length(imageFiles)
     %read in each image
     I = imread(fullfile(inputFolder_I, imageFiles(i).name));
@@ -26,12 +27,12 @@ for i = 1:length(imageFiles)
     
     BW = imbinarize(enhancedJ, "adaptive" , "ForegroundPolarity",'dark','Sensitivity',0.40);
     BW = ~BW;
-
-    edge_I = edge(enhancedJ, 'sobel');
     
+    %Setting structuring elements##
     SEsq = strel('square', 3);
     SErect = strel('rectangle', [3 3]);
-
+    
+    %Morphological Operations etc
     I_Dilate = imdilate(BW, SErect);
     I_Remove = bwareaopen(I_Dilate, 60);
     I_Thicken = bwmorph(I_Remove, 'thicken');
