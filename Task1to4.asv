@@ -1,0 +1,82 @@
+clear; close all;
+
+
+% Task 1: Pre-processing -----------------------
+% Step-1: Load input image
+I = imread('Assignment_Input\IMG_01.jpg');
+figure, imshow(I), title('Original Image');
+
+% Step-2: Covert image to grayscale
+I_gray = rgb2gray(I);
+figure, imshow(I_gray), title('Grayscale image');
+
+% Step-3: Rescale image
+J = imresize(I_gray, 0.5, 'bilinear');
+figure, imshow(J), title('Image reiszed to half size via billinear interpolation');
+% Step-4: Produce histogram before enhancing
+figure, imhist(J, 256), title('Histogram before enhancement');
+% Step-5: Enhance image before binarisation
+enhancedJ = imadjust(J);
+enhancedJ = imsharpen(enhancedJ, radius=1 , amount=1);
+
+figure , imshow(enhancedJ), title('Enhanced Image');
+% Step-6: Histogram after enhancement
+figure, imhist(enhancedJ, 256), title("Histogram after enhancement");
+% Step-7: Image Binarisation
+BW = imbinarize(enhancedJ, 'adaptive','ForegroundPolarity','dark','Sensitivity',0.38);
+BW = ~BW;
+figure, imshow(BW)
+title('Original Binarised Image');
+% Task 2: Edge detection ------------------------
+edgeImg = edge(enhancedJ, "sobel");
+figure, imshow(edgeImg), title('Edge detection using sobel operator');
+
+% Task 3: Simple segmentation --------------------
+
+%Structuring element for morphological operations
+se = strel('disk', 1);
+se2 = strel('disk', 2);
+
+%Dilate and fill holes
+I_Dilated = imdilate(edgeImg, se);
+figure, imshow(I_Dilated), title('Dilated image')
+I_Filled = imfill(I_Dilated, 'holes');
+figure, imshow(I_Filled), title('Dilated and holes filled image');
+
+%Erode image to remove some noise around objects
+I_Eroded = imerode(I_Filled, se2);
+figure, imshow(I_Eroded), title('Eroded Image');
+
+%Removing objects less than 4 pixels
+BW2 = bwareaopen(I_Eroded, 4);
+figure, imshow(BW2), title('Segmented Image');
+
+% Task 4: Object Recognition --------------------
+
+%Getting labels from image
+[L, num] = bwlabel(BW2);
+labels = label2rgb(L, 'prism', 'k', 'shuffle');
+figure, imshow(labels);
+title(['Different labelled regions = ', num2str(num)]);
+
+%table of stats containg the perimeter, area and circularity of each
+%labelled region.
+stats = regionprops('table', L, 'Perimeter', 'Area', 'Circularity');
+
+%Creating a threshold for the circularity of a washer
+washerCircularityThreshold = 0.8;
+
+%Loop through each value in circularity column
+%If the value is greater than the threshold is it one colour
+%else it is set to another colour.
+for i=1:height(stats)
+    if stats.Circularity(i) > washerCircularityThreshold
+        L(L == i) = 2;
+    else
+        L(L == i) = 1;
+    end
+end
+
+rgb_label = label2rgb(L,'prism', 'k');
+figure, imshow(rgb_label);
+title('Washers in orange, short screws in red');
